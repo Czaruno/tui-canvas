@@ -1,0 +1,21 @@
+{
+  "name": "@tui-canvas/runtime-ink",
+  "version": "0.3.0",
+  "description": "Ink runtime adapter for TUI Canvas",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node"
+  },
+  "dependencies": {
+    "@tui-canvas/protocol": "workspace:*",
+    "ink": "^6.6.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "../../packages/protocol/schema/manifest.json",
+  "id": "document",
+  "name": "Document Canvas",
+  "description": "Markdown document viewer and editor with text selection support",
+  "version": "1.0.0",
+  "author": "TUI Canvas Contributors",
+  "repository": "https://github.com/anomalyco/tui-canvas",
+  
+  "scenarios": {
+    "display": {
+      "description": "Read-only markdown document display",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string", "description": "Markdown content" },
+          "title": { "type": "string", "description": "Document title" }
+        },
+        "required": ["content"]
+      }
+    },
+    "edit": {
+      "description": "Editable document with text selection",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "title": { "type": "string" }
+        },
+        "required": ["content"]
+      },
+      "resultSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "selection": {
+            "type": "object",
+            "properties": {
+              "selectedText": { "type": "string" },
+              "startOffset": { "type": "number" },
+              "endOffset": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "email-preview": {
+      "description": "Email preview with headers",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "from": { "type": "string" },
+          "to": { "type": "array", "items": { "type": "string" } },
+          "cc": { "type": "array", "items": { "type": "string" } },
+          "subject": { "type": "string" }
+        },
+        "required": ["content", "from", "to", "subject"]
+      }
+    }
+  },
+  
+  "implementations": {
+    "opentui": {
+      "framework": "opentui",
+      "reconciler": "solid",
+      "entrypoint": "./opentui/index.ts"
+    },
+    "ink": {
+      "framework": "ink",
+      "entrypoint": "./ink/index.tsx"
+    }
+  },
+  
+  "defaultImplementation": "ink"
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "../../packages/protocol/schema/manifest.json",
+  "id": "calendar",
+  "name": "Calendar Canvas",
+  "description": "Weekly calendar view with event display and interactive meeting time picker",
+  "version": "1.0.0",
+  "author": "TUI Canvas Contributors",
+  "repository": "https://github.com/anomalyco/tui-canvas",
+  
+  "scenarios": {
+    "display": {
+      "description": "Display-only weekly calendar view with events",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "weekStart": { "type": "string", "format": "date" },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "startTime": { "type": "string", "format": "date-time" },
+                "endTime": { "type": "string", "format": "date-time" },
+                "color": { "type": "string" }
+              },
+              "required": ["id", "title", "startTime", "endTime"]
+            }
+          }
+        }
+      }
+    },
+    "meeting-picker": {
+      "description": "Interactive meeting time slot picker",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "duration": { "type": "number", "default": 30 },
+          "weekStart": { "type": "string", "format": "date" },
+          "calendars": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "color": { "type": "string" },
+                "events": { "type": "array" }
+              }
+            }
+          }
+        }
+      },
+      "resultSchema": {
+        "type": "object",
+        "properties": {
+          "startTime": { "type": "string", "format": "date-time" },
+          "endTime": { "type": "string", "format": "date-time" }
+        },
+        "required": ["startTime", "endTime"]
+      }
+    }
+  },
+  
+  "implementations": {
+    "opentui": {
+      "framework": "opentui",
+      "reconciler": "solid",
+      "entrypoint": "./opentui/index.ts"
+    },
+    "ink": {
+      "framework": "ink",
+      "entrypoint": "./ink/index.tsx"
+    }
+  },
+  
+  "defaultImplementation": "ink"
+}

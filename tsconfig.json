@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "jsx": "react-jsx",
+    "types": ["bun-types"],
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "include": [
+    "canvas/**/*.ts",
+    "canvas/**/*.tsx",
+    ".opencode/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

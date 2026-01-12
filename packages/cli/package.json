@@ -1,0 +1,30 @@
+{
+  "name": "@tui-canvas/cli",
+  "version": "0.3.0",
+  "description": "CLI for TUI Canvas - spawn and manage canvases",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./registry": "./src/registry.ts",
+    "./spawn": "./src/spawn.ts"
+  },
+  "bin": {
+    "tui-canvas": "src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node"
+  },
+  "dependencies": {
+    "@tui-canvas/protocol": "workspace:*",
+    "@tui-canvas/runtime-ink": "workspace:*",
+    "@tui-canvas/runtime-opentui": "workspace:*",
+    "commander": "^14.0.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "license": "MIT"
+}

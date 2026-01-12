@@ -1,0 +1,47 @@
+{
+  "name": "tui-canvas",
+  "version": "0.3.0",
+  "description": "Framework-agnostic interactive terminal canvases for AI coding assistants. Supports OpenTUI, Ink, and more via MCP.",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "packages/runtime/*",
+    "canvases/*"
+  ],
+  "scripts": {
+    "build": "bun run --filter '*' build",
+    "dev": "bun run --cwd packages/cli dev",
+    "start": "bun run --cwd packages/cli start",
+    "mcp": "bun run --cwd packages/mcp start"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anomalyco/tui-canvas"
+  },
+  "keywords": [
+    "tui-canvas",
+    "opentui",
+    "ink",
+    "opencode",
+    "claude",
+    "cursor",
+    "gemini",
+    "grok",
+    "mcp",
+    "canvas",
+    "tui",
+    "terminal",
+    "ai"
+  ],
+  "license": "MIT"
+}

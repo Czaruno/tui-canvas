@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Bun
+bun.lockb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Canvas runtime
+/tmp/canvas-*.sock
+/tmp/canvas-config-*.json
+/tmp/claude-canvas-pane-id
+/tmp/opencode-canvas-pane-id
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local development
+session-state.md
+docs/sessions/

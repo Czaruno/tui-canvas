@@ -1,0 +1,27 @@
+{
+  "name": "@tui-canvas/canvas-calendar",
+  "version": "1.0.0",
+  "description": "Calendar canvas for TUI Canvas",
+  "type": "module",
+  "main": "ink/index.tsx",
+  "bin": {
+    "canvas-calendar": "ink/index.tsx"
+  },
+  "scripts": {
+    "start:ink": "bun run ink/index.tsx",
+    "start:opentui": "bun run opentui/index.tsx"
+  },
+  "dependencies": {
+    "@tui-canvas/protocol": "workspace:*",
+    "@opentui/core": "^0.1.72",
+    "@opentui/solid": "^0.1.72",
+    "ink": "^6.0.0",
+    "react": "^19.0.0",
+    "solid-js": "^1.9.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0"
+  },
+  "license": "MIT"
+}

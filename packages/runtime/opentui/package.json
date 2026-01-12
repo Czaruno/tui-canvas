@@ -1,0 +1,27 @@
+{
+  "name": "@tui-canvas/runtime-opentui",
+  "version": "0.3.0",
+  "description": "OpenTUI runtime adapter for TUI Canvas",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node"
+  },
+  "dependencies": {
+    "@tui-canvas/protocol": "workspace:*",
+    "@opentui/core": "^0.1.72"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "@opentui/solid": "^0.1.0",
+    "@opentui/react": "^0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentui/solid": { "optional": true },
+    "@opentui/react": { "optional": true }
+  },
+  "license": "MIT"
+}

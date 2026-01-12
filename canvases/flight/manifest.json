@@ -1,0 +1,78 @@
+{
+  "$schema": "../../packages/protocol/schema/manifest.json",
+  "id": "flight",
+  "name": "Flight Canvas",
+  "description": "Cyberpunk-themed flight comparison and interactive seat selection",
+  "version": "1.0.0",
+  "author": "TUI Canvas Contributors",
+  "repository": "https://github.com/anomalyco/tui-canvas",
+  
+  "scenarios": {
+    "default": {
+      "description": "Flight comparison with optional seatmap selection",
+      "configSchema": {
+        "type": "object",
+        "properties": {
+          "flights": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "airline": { "type": "string" },
+                "flightNumber": { "type": "string" },
+                "origin": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string" },
+                    "name": { "type": "string" },
+                    "city": { "type": "string" }
+                  }
+                },
+                "destination": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "string" },
+                    "name": { "type": "string" },
+                    "city": { "type": "string" }
+                  }
+                },
+                "departureTime": { "type": "string", "format": "date-time" },
+                "arrivalTime": { "type": "string", "format": "date-time" },
+                "duration": { "type": "number" },
+                "price": { "type": "number" },
+                "currency": { "type": "string" },
+                "seatmap": { "type": "object" }
+              },
+              "required": ["id", "airline", "flightNumber", "origin", "destination", "departureTime", "arrivalTime", "price"]
+            }
+          },
+          "showSeatmap": { "type": "boolean", "default": true }
+        },
+        "required": ["flights"]
+      },
+      "resultSchema": {
+        "type": "object",
+        "properties": {
+          "selectedFlight": { "type": "object" },
+          "selectedSeat": { "type": "string" }
+        },
+        "required": ["selectedFlight"]
+      }
+    }
+  },
+  
+  "implementations": {
+    "opentui": {
+      "framework": "opentui",
+      "reconciler": "solid",
+      "entrypoint": "./opentui/index.ts"
+    },
+    "ink": {
+      "framework": "ink",
+      "entrypoint": "./ink/index.tsx"
+    }
+  },
+  
+  "defaultImplementation": "ink"
+}

@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tui-canvas.dev/schema/manifest.json",
+  "title": "Canvas Manifest",
+  "description": "Manifest file for a TUI Canvas implementation",
+  "type": "object",
+  "required": ["id", "name", "version", "scenarios", "implementations", "defaultImplementation"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique canvas identifier",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what this canvas does"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "author": {
+      "type": "string",
+      "description": "Author/maintainer"
+    },
+    "repository": {
+      "type": "string",
+      "description": "Repository URL"
+    },
+    "scenarios": {
+      "type": "object",
+      "description": "Available scenarios/modes",
+      "additionalProperties": {
+        "$ref": "#/definitions/scenario"
+      }
+    },
+    "implementations": {
+      "type": "object",
+      "description": "Available implementations keyed by name",
+      "additionalProperties": {
+        "$ref": "#/definitions/implementation"
+      }
+    },
+    "defaultImplementation": {
+      "type": "string",
+      "description": "Default implementation to use"
+    }
+  },
+  "definitions": {
+    "scenario": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "configSchema": {
+          "type": "object",
+          "description": "JSON Schema for config input"
+        },
+        "resultSchema": {
+          "type": "object",
+          "description": "JSON Schema for result output"
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["framework", "entrypoint"],
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["opentui", "ink", "bubbletea", "textual", "ratatui", "blessed", "custom"]
+        },
+        "entrypoint": {
+          "type": "string",
+          "description": "Entry point file relative to canvas directory"
+        },
+        "reconciler": {
+          "type": "string",
+          "enum": ["core", "react", "solid"],
+          "description": "For OpenTUI: which reconciler to use"
+        },
+        "binary": {
+          "type": "string",
+          "description": "For compiled languages: path to binary"
+        },
+        "interpreter": {
+          "type": "string",
+          "description": "For interpreted languages: interpreter command"
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional spawn arguments"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Environment variables to set"
+        }
+      }
+    }
+  }
+}

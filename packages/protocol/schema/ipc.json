@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tui-canvas.dev/schema/ipc.json",
+  "title": "TUI Canvas IPC Messages",
+  "description": "Message schemas for canvas-controller communication",
+  
+  "definitions": {
+    "canvasMessage": {
+      "title": "Canvas Message",
+      "description": "Messages sent from canvas to controller",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "scenario"],
+          "properties": {
+            "type": { "const": "ready" },
+            "scenario": { "type": "string" },
+            "capabilities": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "data"],
+          "properties": {
+            "type": { "const": "selected" },
+            "data": {}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "data"],
+          "properties": {
+            "type": { "const": "updated" },
+            "data": {}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "cancelled" },
+            "reason": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "message"],
+          "properties": {
+            "type": { "const": "error" },
+            "message": { "type": "string" },
+            "code": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "timestamp"],
+          "properties": {
+            "type": { "const": "pong" },
+            "timestamp": { "type": "number" }
+          }
+        }
+      ]
+    },
+    "controllerMessage": {
+      "title": "Controller Message",
+      "description": "Messages sent from controller to canvas",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "config"],
+          "properties": {
+            "type": { "const": "update" },
+            "config": {}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "close" },
+            "reason": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "queryType"],
+          "properties": {
+            "type": { "const": "query" },
+            "queryType": { "type": "string" },
+            "params": {}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "timestamp"],
+          "properties": {
+            "type": { "const": "ping" },
+            "timestamp": { "type": "number" }
+          }
+        }
+      ]
+    }
+  }
+}

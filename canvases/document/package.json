@@ -1,0 +1,24 @@
+{
+  "name": "@tui-canvas/canvas-document",
+  "version": "1.0.0",
+  "description": "Document canvas for TUI Canvas",
+  "type": "module",
+  "main": "ink/index.tsx",
+  "bin": {
+    "canvas-document": "ink/index.tsx"
+  },
+  "scripts": {
+    "start:ink": "bun run ink/index.tsx",
+    "start:opentui": "bun run opentui/index.ts"
+  },
+  "dependencies": {
+    "@tui-canvas/protocol": "workspace:*",
+    "ink": "^6.0.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.0.0"
+  },
+  "license": "MIT"
+}

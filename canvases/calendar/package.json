@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start:ink": "bun run ink/index.tsx",
-    "start:opentui": "bun run opentui/index.tsx"
+    "start:opentui": "bun run opentui/index.ts"
   },
   "dependencies": {
     "@tui-canvas/protocol": "workspace:*",
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "^20.11.30",
     "@types/react": "^19.0.0"
   },
   "license": "MIT"

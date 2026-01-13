@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useApp } from "ink";
-import { connectWithRetry, type IPCClient } from "../../../ipc/client";
-import type { CanvasMessage, ControllerMessage } from "../../../ipc/types";
+import { connectWithRetry, type IPCClient } from "../../../../packages/core/src/ipc/client";
+import type { CanvasMessage, ControllerMessage } from "../../../../packages/core/src/ipc/types";
 
 export interface UseIPCOptions {
   socketPath: string | undefined;
@@ -62,8 +62,8 @@ export function useIPC(options: UseIPCOptions): IPCHandle {
               setIsConnected(false);
             }
           },
-          onError: (err) => {
-            console.error("IPC error:", err);
+          onError: (_err) => {
+            // Error handled silently
           },
         });
 
@@ -75,8 +75,8 @@ export function useIPC(options: UseIPCOptions): IPCHandle {
         } else {
           client.close();
         }
-      } catch (err) {
-        console.error("Failed to connect to controller:", err);
+      } catch (_err) {
+        // Connection failed - canvas will work in standalone mode
       }
     };
 

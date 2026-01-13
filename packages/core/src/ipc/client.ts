@@ -2,6 +2,11 @@
 // Connects to the controller's Unix domain socket
 
 import type { ControllerMessage, CanvasMessage } from "./types";
+import { appendFileSync } from "fs";
+
+function clientDebugLog(msg: string) {
+  try { appendFileSync("/tmp/canvas-debug.log", `[IPC-CLIENT] ${msg}\n`); } catch {}
+}
 
 export interface IPCClientOptions {
   socketPath: string;
@@ -24,10 +29,12 @@ export async function connectToController(
   let connected = false;
   let buffer = "";
 
+  clientDebugLog(`Connecting to socket: ${socketPath}`);
   const socket = await Bun.connect({
     unix: socketPath,
     socket: {
       open(_socket) {
+        clientDebugLog(`Socket open callback fired`);
         connected = true;
       },
 
@@ -65,8 +72,13 @@ export async function connectToController(
 
   return {
     send(msg: CanvasMessage) {
+      const data = JSON.stringify(msg) + "\n";
+      clientDebugLog(`Sending message (connected=${connected}): ${data.trim()}`);
       if (connected) {
-        socket.write(JSON.stringify(msg) + "\n");
+        const written = socket.write(data);
+        clientDebugLog(`socket.write returned: ${written}`);
+      } else {
+        clientDebugLog(`NOT CONNECTED - message not sent`);
       }
     },
 
@@ -101,7 +113,7 @@ export async function connectWithRetry(
   throw lastError || new Error("Failed to connect to controller");
 }
 
-// Create an IPC client for controller side
+// Create an IPC client for controller side (deprecated - use createControllerServer instead)
 export async function createIPCClient(options: {
   socketPath: string;
   onMessage: (msg: CanvasMessage) => void;
@@ -117,11 +129,11 @@ export async function createIPCClient(options: {
   socket = await Bun.connect({
     unix: socketPath,
     socket: {
-      open(_socket) {
+      open(socket) {
         onConnect?.();
       },
 
-      data(_socket, data) {
+      data(socket, data) {
         buffer += data.toString();
 
         const lines = buffer.split("\n");
@@ -143,7 +155,7 @@ export async function createIPCClient(options: {
         onDisconnect?.();
       },
 
-      error(_socket, error) {
+      error(socket, error) {
         onError?.(error);
       },
     },

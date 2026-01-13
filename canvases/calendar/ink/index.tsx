@@ -10,9 +10,8 @@ import React from "react";
 import { render } from "ink";
 import { parseArgs } from "util";
 
-// Import the calendar component from the core package
-// TODO: Once we fully migrate, this will be self-contained
-import { Calendar } from "../../../packages/core/src/canvases/calendar.js";
+// Import the calendar component (self-contained in this directory)
+import { Calendar } from "./calendar";
 
 // Parse command line arguments
 const { values } = parseArgs({

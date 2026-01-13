@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useInput, useApp, useStdout } from "ink";
 import { useMouse, type MouseEvent } from "../hooks/use-mouse";
 import { useIPC } from "../hooks/use-ipc";
-import type { MeetingPickerConfig, MeetingPickerResult, NamedCalendar } from "../../../scenarios/types";
+import type { MeetingPickerConfig, MeetingPickerResult, NamedCalendar } from "./types";
 import {
   getWeekDays,
   formatDayName,

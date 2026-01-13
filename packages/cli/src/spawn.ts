@@ -8,7 +8,8 @@
 
 import { spawn, spawnSync } from "child_process";
 import { createHash } from "crypto";
-import { join } from "path";
+import { existsSync } from "fs";
+import { basename, dirname, join } from "path";
 import type {
   CanvasManifest,
   CanvasImplementation,
@@ -145,15 +146,33 @@ export async function spawnCanvas(options: SpawnCanvasOptions): Promise<SpawnRes
 
   // Build the entrypoint path
   const entrypoint = join(canvasPath, implementation.entrypoint);
+  const entrypointDir = dirname(entrypoint);
+  const entrypointFile = basename(entrypoint);
 
   // Build command arguments
   const args = [
     "run",
-    entrypoint,
+  ];
+
+  if (implementation.framework === "opentui") {
+    args.push("--cwd", entrypointDir);
+    
+    // Note: Don't use --config bunfig.toml or --tsconfig-override because:
+    // 1. We already pass --preload explicitly (bunfig.toml conflict)
+    // 2. tsconfig-override can cause "directory mismatch" errors in bun
+
+    args.push("--preload", "@opentui/solid/preload");
+
+    args.push(entrypointFile);
+  } else {
+    args.push(entrypoint);
+  }
+
+  args.push(
     "--id", instanceId,
     "--socket", socketPath,
     "--scenario", scenario,
-  ];
+  );
 
   if (config) {
     const configFile = `/tmp/canvas-config-${instanceId}.json`;
@@ -256,7 +275,8 @@ async function createNewPane(
       if (code === 0 && paneId.trim()) {
         const newPaneId = paneId.trim();
         await saveCanvasPaneId(newPaneId);
-        // Set remain-on-exit so pane stays alive after canvas exits
+        // Set remain-on-exit so pane can be reused (MCP server will kill it when done)
+        // This prevents the pane from disappearing before IPC completes
         spawnSync("tmux", ["set-option", "-p", "-t", newPaneId, "remain-on-exit", "on"]);
         resolve({
           success: true,
@@ -484,6 +504,15 @@ export async function cleanupOrphanedPanes(dryRun = false): Promise<CleanupResul
   }
   
   return { found, closed };
+}
+
+/**
+ * Kill a specific canvas pane by ID.
+ * Used to clean up after IPC completes.
+ */
+export function killCanvasPane(paneId: string): boolean {
+  const result = spawnSync("tmux", ["kill-pane", "-t", paneId]);
+  return result.status === 0;
 }
 
 /**

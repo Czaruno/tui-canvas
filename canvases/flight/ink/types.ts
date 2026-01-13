@@ -12,8 +12,9 @@ export interface Seatmap {
   seatsPerRow: string[];       // Seat letters, e.g., ["A", "B", "C", "D", "E", "F"]
   aisleAfter: string[];        // Aisle positions, e.g., ["C"] means aisle after seat C
   unavailable: string[];       // Blocked seats, e.g., ["1A", "1B"]
-  premium: string[];           // Premium seats (exit row, extra legroom)
+  premium?: string[];          // Premium seats (exit row, extra legroom)
   occupied: string[];          // Already booked seats
+  exitRows?: number[];         // Exit row numbers for reference
 }
 
 export interface Flight {

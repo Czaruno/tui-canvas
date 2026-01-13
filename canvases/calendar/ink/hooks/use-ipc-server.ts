@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useApp } from "ink";
-import { createIPCServer, type IPCServer } from "../../../ipc/server";
-import type { CanvasMessage, ControllerMessage } from "../../../ipc/types";
+import { createIPCServer, type IPCServer } from "../../../../packages/core/src/ipc/server";
+import type { CanvasMessage, ControllerMessage } from "../../../../packages/core/src/ipc/types";
 
 export interface UseIPCServerOptions {
   socketPath: string | undefined;
@@ -41,7 +41,9 @@ export function useIPCServer(options: UseIPCServerOptions): IPCServerHandle {
 
   // Start server on mount
   useEffect(() => {
-    if (!socketPath) return;
+    if (!socketPath) {
+      return;
+    }
 
     let mounted = true;
 
@@ -76,6 +78,8 @@ export function useIPCServer(options: UseIPCServerOptions): IPCServerHandle {
           onClientConnect: () => {
             if (mounted) {
               setIsConnected(true);
+              // Send ready message when client connects
+              server.broadcast({ type: "ready", scenario });
             }
           },
           onClientDisconnect: () => {
@@ -83,8 +87,8 @@ export function useIPCServer(options: UseIPCServerOptions): IPCServerHandle {
               setIsConnected(false);
             }
           },
-          onError: (err) => {
-            console.error("IPC error:", err);
+          onError: (_err) => {
+            // Error handled silently
           },
         });
 
@@ -93,8 +97,8 @@ export function useIPCServer(options: UseIPCServerOptions): IPCServerHandle {
         } else {
           server.close();
         }
-      } catch (err) {
-        console.error("Failed to start IPC server:", err);
+      } catch (_err) {
+        // Server start failed - canvas will work in standalone mode
       }
     };
 

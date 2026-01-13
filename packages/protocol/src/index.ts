@@ -82,6 +82,9 @@ export interface CanvasImplementation {
   /** For OpenTUI: which reconciler to use */
   reconciler?: OpenTUIReconciler;
   
+  /** Optional status marker (e.g., placeholder) */
+  status?: string;
+  
   /** For compiled languages: path to binary */
   binary?: string;
   

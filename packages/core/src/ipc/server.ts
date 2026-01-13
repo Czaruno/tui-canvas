@@ -2,7 +2,11 @@
 // Listens on a Unix domain socket for controller commands
 
 import type { ControllerMessage, CanvasMessage } from "./types";
-import { unlinkSync, existsSync } from "fs";
+import { unlinkSync, existsSync, appendFileSync } from "fs";
+
+function serverDebugLog(msg: string) {
+  try { appendFileSync("/tmp/canvas-debug.log", `[IPC-SERVER] ${msg}\n`); } catch {}
+}
 
 export interface IPCServerOptions {
   socketPath: string;
@@ -112,25 +116,32 @@ export interface ControllerServer {
 export async function createControllerServer(options: ControllerServerOptions): Promise<ControllerServer> {
   const { socketPath, onMessage, onClientConnect, onClientDisconnect, onError } = options;
 
+  serverDebugLog(`Creating controller server on: ${socketPath}`);
+
   // Remove existing socket file if it exists
   if (existsSync(socketPath)) {
+    serverDebugLog(`Removing existing socket file`);
     unlinkSync(socketPath);
   }
 
   const clients = new Set<any>();
   let buffer = "";
 
+  serverDebugLog(`Calling Bun.listen on unix socket`);
   const server = Bun.listen({
     unix: socketPath,
     socket: {
       open(socket) {
+        serverDebugLog(`Socket open callback - client connected`);
         clients.add(socket);
         onClientConnect?.();
       },
 
       data(_socket, data) {
         // Accumulate data and parse complete JSON messages
-        buffer += data.toString();
+        const rawData = data.toString();
+        serverDebugLog(`Received raw data: ${rawData.trim()}`);
+        buffer += rawData;
 
         const lines = buffer.split("\n");
         buffer = lines.pop() || "";

@@ -186,3 +186,37 @@ Pane tracking files: `/tmp/opencode-canvas-{hash}.pane`
 - tmux session (required for spawning)
 - Terminal with mouse support
 - Bun runtime
+
+## Development Notes
+
+### MCP Server Restart Required
+
+**IMPORTANT**: The MCP server runs as a subprocess of the AI harness (OpenCode, Claude Code, etc.). When you make changes to MCP server code in `packages/mcp/`, the changes will NOT take effect until the harness is restarted.
+
+- The AI agent cannot restart its own harness (it would terminate itself)
+- After modifying MCP code, ask the user to restart OpenCode/Claude Code
+- Test MCP changes by having the user restart, then use the MCP tools
+
+### Testing MCP Changes
+
+1. Make changes to `packages/mcp/src/`
+2. Ask user to restart their AI harness
+3. After restart, test with MCP tools like `canvas_calendar`, `canvas_document`, etc.
+
+### IPC Debugging
+
+The IPC architecture follows the Claude Canvas pattern:
+1. Controller (MCP server) creates Unix socket server FIRST
+2. Canvas process spawns and connects as client
+3. Canvas sends "ready" message
+4. User interacts, canvas sends "selected" or "cancelled"
+
+Common issues:
+- **Canvas exits immediately**: Check if `onMount` hooks fire (OpenTUI/Solid.js issue)
+- **Timeout waiting for selection**: IPC server may not be ready before canvas spawns
+- **Socket not found**: Server cleanup happened before canvas could connect
+
+### Framework Differences
+
+- **Ink (React)**: Uses `await waitUntilExit()` to keep process alive
+- **OpenTUI (Solid.js)**: `render()` returns immediately; process stays alive via stdin listeners

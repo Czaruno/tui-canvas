@@ -8,7 +8,9 @@
 
 import { Command } from "commander";
 import { spawnSync } from "child_process";
+import type { Framework } from "@tui-canvas/protocol";
 import { loadRegistry, discoverCanvases } from "./registry.js";
+import { resolveImplementation } from "./runtime.js";
 import { spawnCanvas, cleanupOrphanedPanes, getCanvasPaneInfo } from "./spawn.js";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -86,11 +88,13 @@ program
   .option("-s, --scenario <scenario>", "Scenario to run", "default")
   .option("-c, --config <json>", "Canvas configuration (JSON)")
   .option("-i, --implementation <impl>", "Implementation to use")
+  .option("-f, --framework <framework>", "Framework to use (opentui, ink)")
   .option("--no-tmux", "Run directly instead of in tmux pane")
   .action(async (canvasId: string, options: {
     scenario: string;
     config?: string;
     implementation?: string;
+    framework?: string;
     tmux: boolean;
   }) => {
     const registry = await loadRegistry(CANVASES_DIR);
@@ -104,14 +108,32 @@ program
     const { manifest, path: canvasPath } = entry;
     
     // Determine implementation
-    const implName = options.implementation || manifest.defaultImplementation;
-    const implementation = manifest.implementations[implName];
-    
-    if (!implementation) {
-      console.error(`Implementation not found: ${implName}`);
+    const resolution = await resolveImplementation(manifest, {
+      implementation: options.implementation,
+      framework: options.framework as Framework | undefined,
+    });
+
+    if (resolution.warnings.length > 0) {
+      for (const warning of resolution.warnings) {
+        console.warn(`Warning: ${warning}`);
+      }
+    }
+
+    if (!resolution.implementation || !resolution.implName) {
+      console.error(resolution.error || "Failed to resolve implementation");
       console.error(`Available: ${Object.keys(manifest.implementations).join(", ")}`);
       process.exit(1);
     }
+
+    if (resolution.missingDependencies.length > 0) {
+      console.error(
+        `Missing dependencies for ${resolution.implName}: ${resolution.missingDependencies.join(", ")}`
+      );
+      process.exit(1);
+    }
+
+    const implName = resolution.implName;
+    const implementation = resolution.implementation;
     
     // Validate scenario
     const scenario = options.scenario === "default" 

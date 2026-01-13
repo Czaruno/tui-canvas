@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Text, useInput, useApp, useStdout } from "ink";
-import { useIPCServer } from "./calendar/hooks/use-ipc-server";
-import { useMouse } from "./calendar/hooks/use-mouse";
-import { RawMarkdownRenderer } from "./document/components/raw-markdown-renderer";
-import { EmailHeader } from "./document/components/email-header";
-import type { DocumentConfig, EmailConfig } from "./document/types";
+import { useIPC } from "../../calendar/ink/hooks/use-ipc";
+import { useMouse } from "../../calendar/ink/hooks/use-mouse";
+import { RawMarkdownRenderer } from "./components/raw-markdown-renderer";
+import { EmailHeader } from "./components/email-header";
+import type { DocumentConfig, EmailConfig } from "./types";
 
 interface Props {
   id: string;
@@ -41,29 +41,14 @@ export function Document({ id, config: initialConfig, socketPath, scenario = "di
   // Live config state (can be updated via IPC)
   const [liveConfig, setLiveConfig] = useState<DocumentConfig | undefined>(initialConfig);
 
-  // IPC for communicating with Claude (server mode for CLI)
-  const ipc = useIPCServer({
+  // IPC for communicating with controller (Claude/OpenCode)
+  const ipc = useIPC({
     socketPath,
     scenario: scenario || "display",
     onClose: () => exit(),
     onUpdate: (newConfig) => {
       setLiveConfig(newConfig as DocumentConfig);
     },
-    onGetSelection: () => {
-      if (selectionStart === null || selectionEnd === null) return null;
-      const start = Math.min(selectionStart, selectionEnd);
-      const end = Math.max(selectionStart, selectionEnd);
-      if (start === end) return null;
-      return {
-        selectedText: content.slice(start, end),
-        startOffset: start,
-        endOffset: end,
-      };
-    },
-    onGetContent: () => ({
-      content,
-      cursorPosition,
-    }),
   });
 
   // Check if this is an email preview scenario
@@ -182,12 +167,27 @@ export function Document({ id, config: initialConfig, socketPath, scenario = "di
     }
   }, [selectionStart, selectionEnd]);
 
-  // Use mouse hook
+  // Track dragging state for conditional move handling
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Wrapped click handler that sets dragging state
+  const wrappedMouseClick = useCallback((event: { x: number; y: number }) => {
+    setIsDragging(true);
+    handleMouseClick(event);
+  }, [handleMouseClick]);
+  
+  // Wrapped release handler that clears dragging state
+  const wrappedMouseRelease = useCallback((event: { x: number; y: number }) => {
+    setIsDragging(false);
+    handleMouseRelease();
+  }, [handleMouseRelease]);
+
+  // Use mouse hook - only track movement while actively dragging
   useMouse({
     enabled: !readOnly,
-    onClick: handleMouseClick,
-    onMove: handleMouseMove,
-    onRelease: handleMouseRelease,
+    onClick: wrappedMouseClick,
+    onMove: isDragging ? handleMouseMove : undefined,
+    onRelease: wrappedMouseRelease,
   });
 
   // Helper: get normalized selection bounds
@@ -236,9 +236,17 @@ export function Document({ id, config: initialConfig, socketPath, scenario = "di
   // Keyboard controls
   useInput((input, key) => {
     // Ignore mouse escape sequence fragments that leak through
-    // These look like: <, [, digits, ;, M, m, etc. from \x1b[<btn;x;y[Mm]
-    if (input && /^[<\[\];Mm\d]+$/.test(input)) {
-      return;
+    // SGR mouse format: \x1b[<btn;x;yM or \x1b[<btn;x;ym
+    // Be careful not to filter legitimate single characters like 'm' or 'M'
+    if (input && input.length > 1) {
+      // Skip if contains escape sequence markers
+      if (input.includes('\x1b') || input.includes('[<')) return;
+      // Skip mouse sequences: <digits;digits;digitsM or m
+      if (/^<\d+;\d+;\d+[Mm]/.test(input)) return;
+      // Skip partial mouse sequences with semicolons and numbers
+      if (/^\d+;\d+/.test(input)) return;
+      // Skip fragments that look like mouse data (semicolons with numbers)
+      if (/^[\d;]+[Mm]$/.test(input)) return;
     }
 
     // Quit with Escape
@@ -335,6 +343,40 @@ export function Document({ id, config: initialConfig, socketPath, scenario = "di
         setCursorPosition(Math.min(newPos, text.length));
         ensureCursorVisible(Math.min(newPos, text.length), text);
       }
+      return;
+    }
+
+    // Home - go to start of line
+    if (input === "home" || (key.ctrl && input === "a")) {
+      clearSelection();
+      const lines = text.split("\n");
+      let currentLine = 0;
+      for (let i = 0; i < pos; i++) {
+        if (text[i] === "\n") currentLine++;
+      }
+      let lineStart = 0;
+      for (let l = 0; l < currentLine; l++) {
+        lineStart += lines[l].length + 1;
+      }
+      setCursorPosition(lineStart);
+      ensureCursorVisible(lineStart, text);
+      return;
+    }
+
+    // End - go to end of line
+    if (input === "end" || (key.ctrl && input === "e")) {
+      clearSelection();
+      const lines = text.split("\n");
+      let currentLine = 0;
+      for (let i = 0; i < pos; i++) {
+        if (text[i] === "\n") currentLine++;
+      }
+      let lineEnd = 0;
+      for (let l = 0; l <= currentLine; l++) {
+        lineEnd += lines[l].length + (l < currentLine ? 1 : 0);
+      }
+      setCursorPosition(Math.min(lineEnd, text.length));
+      ensureCursorVisible(Math.min(lineEnd, text.length), text);
       return;
     }
 
@@ -439,10 +481,11 @@ export function Document({ id, config: initialConfig, socketPath, scenario = "di
         </Box>
       </Box>
 
-      {/* Document with border - centered */}
-      <Box justifyContent="center" flexGrow={1}>
+      {/* Document with border - centered, fixed height */}
+      <Box justifyContent="center" height={viewportHeight + 4}>
         <Box
           width={docWidth}
+          height={viewportHeight + 4}
           flexDirection="column"
           borderStyle="round"
           borderColor={isEmailPreview ? "blue" : "green"}

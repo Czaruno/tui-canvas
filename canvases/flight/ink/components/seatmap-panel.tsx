@@ -7,6 +7,7 @@ import { type Seatmap, CYBER_COLORS, buildSeat } from "../types";
 interface Props {
   seatmap: Seatmap;
   selectedSeat: string | null;
+  hoveredSeat?: string | null;
   cursorRow: number;
   cursorCol: number;
   focused: boolean;
@@ -17,6 +18,7 @@ interface Props {
 export function SeatmapPanel({
   seatmap,
   selectedSeat,
+  hoveredSeat,
   cursorRow,
   cursorCol,
   focused,
@@ -77,10 +79,12 @@ export function SeatmapPanel({
 
       // Determine seat status
       const isSelected = selectedSeat === seat;
+      const isHovered = hoveredSeat === seat;
       const isOccupied = seatmap.occupied.includes(seat);
       const isUnavailable = seatmap.unavailable.includes(seat);
-      const isPremium = seatmap.premium.includes(seat);
+      const isPremium = seatmap.premium?.includes(seat) ?? false;
       const isCursor = focused && cursorRow === row && cursorCol === letterIndex;
+      const isAvailable = !isOccupied && !isUnavailable;
 
       // Determine display
       let char = "-";
@@ -99,7 +103,13 @@ export function SeatmapPanel({
         color = CYBER_COLORS.neonYellow;
       }
 
-      // Cursor highlight
+      // Hover highlight (only for available seats)
+      if (isHovered && isAvailable && !isSelected) {
+        bgColor = "white";
+        color = "black";
+      }
+
+      // Cursor highlight (takes precedence over hover)
       if (isCursor && !isSelected) {
         bgColor = CYBER_COLORS.neonCyan;
         color = "black";

@@ -28,6 +28,14 @@ Requires tmux session.`,
           default: 'display',
           description: 'Calendar scenario: display (view only) or meeting-picker (select time slots)',
         },
+        implementation: {
+          type: 'string',
+          description: 'Implementation to use (manifest key, e.g., opentui or ink).',
+        },
+        framework: {
+          type: 'string',
+          description: 'Framework to use (opentui, ink).',
+        },
         config: {
           type: 'string',
           description: 'Optional JSON config with events, weekStart, etc.',
@@ -66,6 +74,14 @@ Requires tmux session.`,
           enum: ['display', 'edit', 'email-preview'],
           default: 'display',
           description: 'Document scenario',
+        },
+        implementation: {
+          type: 'string',
+          description: 'Implementation to use (manifest key, e.g., opentui or ink).',
+        },
+        framework: {
+          type: 'string',
+          description: 'Framework to use (opentui, ink).',
         },
         content: {
           type: 'string',
@@ -127,6 +143,14 @@ Requires tmux session.`,
         config: {
           type: 'string',
           description: 'JSON config with flights array. Each flight needs: id, airline, flightNumber, origin (Airport object), destination (Airport object), departureTime, arrivalTime, duration (minutes), price (cents), currency, cabinClass, stops',
+        },
+        implementation: {
+          type: 'string',
+          description: 'Implementation to use (manifest key, e.g., opentui or ink).',
+        },
+        framework: {
+          type: 'string',
+          description: 'Framework to use (opentui, ink).',
         },
         waitForResult: {
           type: 'boolean',

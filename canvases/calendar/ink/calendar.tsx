@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Text, useInput, useApp, useStdout } from "ink";
-import { MeetingPickerView } from "./scenarios/meeting-picker-view.js";
-import type { MeetingPickerConfig } from "./scenarios/types.js";
+import { MeetingPickerView } from "./scenarios/meeting-picker-view";
+import type { MeetingPickerConfig } from "./scenarios/types";
 
 export interface CalendarEvent {
   id: string;
@@ -347,13 +347,13 @@ function AllDayEventsRow({ weekDays, events, columnWidth, timeColumnWidth }: All
 
 export function Calendar({ id, config, socketPath, scenario = "display" }: Props) {
   // Route to meeting picker if that scenario is requested
-  if (scenario === "meeting-picker" && config?.calendars) {
+  if (scenario === "meeting-picker") {
     const pickerConfig: MeetingPickerConfig = {
-      calendars: config.calendars,
-      slotGranularity: config.slotGranularity || 30,
-      minDuration: config.minDuration || 30,
-      maxDuration: config.maxDuration || 120,
-      title: config.title,
+      calendars: config?.calendars || [],
+      slotGranularity: config?.slotGranularity || 30,
+      minDuration: config?.minDuration || 30,
+      maxDuration: config?.maxDuration || 120,
+      title: config?.title,
       startHour: 6,
       endHour: 22,
     };

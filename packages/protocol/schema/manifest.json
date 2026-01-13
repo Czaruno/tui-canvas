@@ -86,6 +86,10 @@
           "enum": ["core", "react", "solid"],
           "description": "For OpenTUI: which reconciler to use"
         },
+        "status": {
+          "type": "string",
+          "description": "Implementation status (e.g., placeholder)"
+        },
         "binary": {
           "type": "string",
           "description": "For compiled languages: path to binary"

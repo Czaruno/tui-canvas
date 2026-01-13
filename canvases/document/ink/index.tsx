@@ -10,8 +10,8 @@ import React from "react";
 import { render } from "ink";
 import { parseArgs } from "util";
 
-// Import the document component from the core package
-import { Document } from "../../../packages/core/src/canvases/document.js";
+// Import the document component (self-contained in this directory)
+import { Document } from "./document";
 
 // Parse command line arguments
 const { values } = parseArgs({

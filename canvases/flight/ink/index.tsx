@@ -10,8 +10,8 @@ import React from "react";
 import { render } from "ink";
 import { parseArgs } from "util";
 
-// Import the flight component from the core package
-import { FlightCanvas } from "../../../packages/core/src/canvases/flight.js";
+// Import the flight component (self-contained in this directory)
+import { FlightCanvas } from "./flight";
 
 // Parse command line arguments
 const { values } = parseArgs({

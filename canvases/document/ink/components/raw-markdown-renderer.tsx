@@ -184,10 +184,12 @@ export function RawMarkdownRenderer({
   }
 
   // Normalize selection bounds
-  const selStart = selectionStart !== null && selectionEnd !== null
+  const selStart = (selectionStart !== null && selectionStart !== undefined && 
+                    selectionEnd !== null && selectionEnd !== undefined)
     ? Math.min(selectionStart, selectionEnd)
     : null;
-  const selEnd = selectionStart !== null && selectionEnd !== null
+  const selEnd = (selectionStart !== null && selectionStart !== undefined && 
+                  selectionEnd !== null && selectionEnd !== undefined)
     ? Math.max(selectionStart, selectionEnd)
     : null;
   const hasSelection = selStart !== null && selEnd !== null && selStart !== selEnd;
@@ -203,9 +205,16 @@ export function RawMarkdownRenderer({
   // Track if we're inside a code block
   let inCodeBlock = false;
 
+  // Pad visible lines to fill viewport height for stable layout
+  const paddedLines = [...visibleLines];
+  const targetHeight = viewportHeight ?? 20;
+  while (paddedLines.length < targetHeight) {
+    paddedLines.push("");
+  }
+
   return (
-    <Box flexDirection="column">
-      {visibleLines.map((line, idx) => {
+    <Box flexDirection="column" height={targetHeight}>
+      {paddedLines.map((line, idx) => {
         const absoluteLineNumber = scrollOffset + idx;
         const lineStartOffset = lineOffsets[absoluteLineNumber] || 0;
         const lineEndOffset = lineStartOffset + line.length;

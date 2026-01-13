@@ -1,5 +1,5 @@
 {
-  "name": "@opentui/core",
+  "name": "@tui-canvas/core",
   "version": "0.2.0",
   "description": "Core TUI canvas components for OpenTUI Canvas",
   "type": "module",

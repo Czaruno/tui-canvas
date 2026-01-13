@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Text, useInput, useApp, useStdout } from "ink";
-import { useIPC } from "./calendar/hooks/use-ipc";
+import { useIPC } from "../../calendar/ink/hooks/use-ipc";
+import { useMouse, type MouseEvent } from "../../calendar/ink/hooks/use-mouse";
 import {
   type FlightConfig,
   type FlightResult,
@@ -13,15 +14,15 @@ import {
   formatDuration,
   formatTime,
   buildSeat,
-} from "./flight/types";
+} from "./types";
 
 // Import subcomponents
-import { CyberpunkHeader } from "./flight/components/cyberpunk-header";
-import { FlightList } from "./flight/components/flight-list";
-import { RouteDisplay } from "./flight/components/route-display";
-import { FlightInfo } from "./flight/components/flight-info";
-import { SeatmapPanel } from "./flight/components/seatmap-panel";
-import { StatusBar } from "./flight/components/status-bar";
+import { CyberpunkHeader } from "./components/cyberpunk-header";
+import { FlightList } from "./components/flight-list";
+import { RouteDisplay } from "./components/route-display";
+import { FlightInfo } from "./components/flight-info";
+import { SeatmapPanel } from "./components/seatmap-panel";
+import { StatusBar } from "./components/status-bar";
 
 interface Props {
   id: string;
@@ -56,6 +57,9 @@ export function FlightCanvas({
   // Seatmap cursor position
   const [seatCursorRow, setSeatCursorRow] = useState(1);
   const [seatCursorCol, setSeatCursorCol] = useState(0);
+
+  // Hover state for mouse
+  const [hoveredSeat, setHoveredSeat] = useState<string | null>(null);
 
   // Countdown state for confirmation
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -137,13 +141,14 @@ export function FlightCanvas({
   );
 
   // Handle final selection
+  // Pass seat directly to avoid race condition with state updates
   const handleConfirm = useCallback(
-    (skipCountdown: boolean = false) => {
+    (skipCountdown: boolean = false, seatOverride?: string) => {
       if (!selectedFlight) return;
 
       const result: FlightResult = {
         selectedFlight,
-        selectedSeat: selectedSeat || undefined,
+        selectedSeat: seatOverride || selectedSeat || undefined,
       };
 
       ipc.sendSelected(result);
@@ -236,17 +241,140 @@ export function FlightCanvas({
     }
   });
 
-  // Layout calculations
+  // Layout calculations (needed for mouse handling)
   const termWidth = dimensions.width;
   const termHeight = dimensions.height;
   const headerHeight = 3;
   const statusBarHeight = 2;
   const contentHeight = termHeight - headerHeight - statusBarHeight;
-
-  // Left panel (flight list) takes ~30% width
   const leftPanelWidth = Math.max(24, Math.floor(termWidth * 0.3));
-  // Right panel takes the rest
   const rightPanelWidth = termWidth - leftPanelWidth - 4;
+
+  // Mouse click handler
+  const handleMouseClick = useCallback(
+    (event: MouseEvent) => {
+      // During countdown, ignore clicks
+      if (countdown !== null) return;
+
+      // Check if click is in left panel (flight list)
+      // Left panel: x from 1 to leftPanelWidth, y from headerHeight+1 onwards
+      if (event.x >= 1 && event.x <= leftPanelWidth && event.y > headerHeight) {
+        // Click in flight list area
+        // Panel border (1) + header "[FLIGHTS]" (1) + margin (1) = 3 rows before content
+        const panelContentY = event.y - headerHeight - 3;
+        if (panelContentY >= 0) {
+          const flightCardHeight = 4; // Height of each flight card
+          
+          // Calculate scroll offset (same logic as FlightList component)
+          const maxFlightListHeight = contentHeight - 4;
+          const visibleItems = Math.floor(maxFlightListHeight / flightCardHeight);
+          let startIndex = 0;
+          if (selectedFlightIndex >= visibleItems) {
+            startIndex = selectedFlightIndex - visibleItems + 1;
+          }
+          
+          const visibleClickedIndex = Math.floor(panelContentY / flightCardHeight);
+          const actualClickedIndex = startIndex + visibleClickedIndex;
+          
+          if (actualClickedIndex >= 0 && actualClickedIndex < flights.length) {
+            // If clicking already selected flight, confirm it
+            if (actualClickedIndex === selectedFlightIndex) {
+              handleConfirm(event.modifiers.shift);
+            } else {
+              // Select the flight
+              setSelectedFlightIndex(actualClickedIndex);
+              setSelectedSeat(null);
+              setFocusMode("flights");
+            }
+          }
+        }
+        return;
+      }
+
+      // Check if click is in right panel (seatmap area if available)
+      if (seatmap && event.x > leftPanelWidth) {
+        const seatmapHeight = Math.min(14, Math.max(12, Math.floor(contentHeight * 0.45)));
+        const seatmapTop = termHeight - statusBarHeight - seatmapHeight;
+
+        if (event.y >= seatmapTop && event.y < termHeight - statusBarHeight) {
+          // Click in seatmap area
+          setFocusMode("seatmap");
+          
+          // Calculate which seat was clicked
+          const seatmapLeftEdge = leftPanelWidth + 5;
+          const relX = event.x - seatmapLeftEdge;
+          const seatmapContentTop = seatmapTop + 3;
+          const relY = event.y - seatmapContentTop;
+          
+          if (relX >= 0 && relY >= 0) {
+            const seatWidth = 3;
+            const clickedRow = Math.floor(relX / seatWidth) + 1;
+            const clickedColIndex = relY;
+            
+            if (clickedRow >= 1 && clickedRow <= seatmap.rows && 
+                clickedColIndex >= 0 && clickedColIndex < seatmap.seatsPerRow.length) {
+              const letter = seatmap.seatsPerRow[clickedColIndex];
+              if (letter && isSeatAvailable(clickedRow, letter)) {
+                const seat = buildSeat(clickedRow, letter);
+                setSelectedSeat(seat);
+                setSeatCursorRow(clickedRow);
+                setSeatCursorCol(clickedColIndex);
+                handleConfirm(event.modifiers.shift, seat);
+              }
+            }
+          }
+        }
+      }
+    },
+    [countdown, leftPanelWidth, headerHeight, contentHeight, flights, selectedFlightIndex, 
+     handleConfirm, seatmap, termHeight, statusBarHeight, isSeatAvailable]
+  );
+
+  // Mouse move handler for hover effects
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (!seatmap) {
+        setHoveredSeat(null);
+        return;
+      }
+
+      const seatmapHeight = Math.min(14, Math.max(12, Math.floor(contentHeight * 0.45)));
+      const seatmapTop = termHeight - statusBarHeight - seatmapHeight;
+
+      // Check if in seatmap area
+      if (event.x > leftPanelWidth && event.y >= seatmapTop && event.y < termHeight - statusBarHeight) {
+        const seatmapLeftEdge = leftPanelWidth + 5;
+        const relX = event.x - seatmapLeftEdge;
+        const seatmapContentTop = seatmapTop + 3;
+        const relY = event.y - seatmapContentTop;
+
+        if (relX >= 0 && relY >= 0) {
+          const seatWidth = 3;
+          const hoveredRow = Math.floor(relX / seatWidth) + 1;
+          const hoveredColIndex = relY;
+
+          if (hoveredRow >= 1 && hoveredRow <= seatmap.rows &&
+              hoveredColIndex >= 0 && hoveredColIndex < seatmap.seatsPerRow.length) {
+            const letter = seatmap.seatsPerRow[hoveredColIndex];
+            if (letter) {
+              const seat = buildSeat(hoveredRow, letter);
+              setHoveredSeat(seat);
+              return;
+            }
+          }
+        }
+      }
+      setHoveredSeat(null);
+    },
+    [seatmap, leftPanelWidth, contentHeight, termHeight, statusBarHeight]
+  );
+
+  // Enable mouse tracking
+  useMouse({
+    enabled: true,
+    onClick: handleMouseClick,
+    onMove: handleMouseMove,
+  });
 
   // Seatmap height (bottom section) - needs space for 6 seat rows + aisle + header + legend
   const seatmapHeight = seatmap ? Math.min(14, Math.max(12, Math.floor(contentHeight * 0.45))) : 0;
@@ -348,6 +476,7 @@ export function FlightCanvas({
               <SeatmapPanel
                 seatmap={seatmap}
                 selectedSeat={selectedSeat}
+                hoveredSeat={hoveredSeat}
                 cursorRow={seatCursorRow}
                 cursorCol={seatCursorCol}
                 focused={focusMode === "seatmap"}
